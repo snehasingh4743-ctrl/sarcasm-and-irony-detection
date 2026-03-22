@@ -1,34 +1,21 @@
-document.getElementById("analyzeBtn").addEventListener("click", async () => {
-    const tweet = document.getElementById("tweetInput").value.trim();
-    const resultDiv = document.getElementById("result");
-    const label = document.getElementById("label");
-    const confidence = document.getElementById("confidence");
-    const comment = document.getElementById("comment");
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sarcasm Detector</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-    if (!tweet) {
-        alert("Please enter a tweet!");
-        return;
-    }
+<div class="container">
+    <h1>Sarcasm Detector</h1>
 
-    resultDiv.classList.remove("hidden");
-    label.textContent = "Analyzing...";
-    confidence.textContent = "";
-    comment.textContent = "";
+    <textarea id="text" placeholder="Enter text here..."></textarea><br>
 
-    const response = await fetch("/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: tweet })
-    });
+    <button onclick="predict()">Check</button>
 
-    const data = await response.json();
+    <h2 id="output"></h2>
+</div>
 
-    label.textContent = data.label === "sarcastic" ? "😏 Sarcastic" : "🙂 Not Sarcastic";
-    confidence.textContent = `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
-
-    const funnyComment = data.label === "sarcastic"
-        ? "Oof, that’s dripping with irony 💅"
-        : "Seems pretty straightforward. No sarcasm detected 🫡";
-
-    comment.textContent = funnyComment;
-});
+<script src="/static/script.js"></script>
+</body>
+</html>
