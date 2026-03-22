@@ -1,35 +1,53 @@
 from flask import Flask, render_template, request, jsonify
-import random
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
 
 app = Flask(__name__)
 
+# -------------------------------
+# Step 1: Train Model (same file)
+# -------------------------------
+data = {
+    "text": [
+        "Oh great, another Monday",
+        "I love this product",
+        "Yeah right, that was amazing",
+        "This is fantastic",
+        "I totally failed, awesome",
+        "What a beautiful day",
+        "Nice, my phone broke again"
+    ],
+    "label": [1, 0, 1, 0, 1, 0, 1]
+}
+
+df = pd.DataFrame(data)
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(df["text"])
+
+model = LogisticRegression()
+model.fit(X, df["label"])
+
+# -------------------------------
+# Step 2: Flask Routes
+# -------------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    data = request.get_json()
-    text = data.get("text", "").lower()
+@app.route("/predict", methods=["POST"])
+def predict():
+    text = request.json["text"]
 
-    # Basic sarcasm word list (expand or replace with ML model later)
-    sarcastic_words = ["yeah right", "sure", "totally", "amazing", "great job", "perfect", "love that for me", "obviously", "Wow", "LOVE", "😍", "meeting", "UGHHHHHH"]
+    transformed = vectorizer.transform([text])
+    prediction = model.predict(transformed)[0]
 
-    # Simple rule-based sarcasm detection
-    is_sarcastic = any(word in text for word in sarcastic_words)
-    label = "sarcastic" if is_sarcastic else "not sarcastic"
+    result = "Sarcastic 😏" if prediction == 1 else "Not Sarcastic 🙂"
+    return jsonify({"result": result})
 
-    # Randomized confidence for demo feel
-    confidence = random.uniform(0.7, 0.95) if is_sarcastic else random.uniform(0.3, 0.6)
-
-    # Highlight any detected sarcasm cues
-    highlights = [word for word in sarcastic_words if word in text]
-
-    return jsonify({
-        "label": label,
-        "confidence": confidence,
-        "highlights": highlights
-    })
-
+# -------------------------------
+# Run App
+# -------------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True)
